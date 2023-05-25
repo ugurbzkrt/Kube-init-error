@@ -1,0 +1,27 @@
+error: [ERROR CRI]: container runtime is not running: output: time="2023-05-25T13:07:06Z" level=fatal msg="validate service connection: CRI v1 runtime API is not implemented for endpoint \"unix:///var/run/containerd/containerd.sock\": rpc error: code = Unimplemented desc = unknown service runtime.v1.RuntimeService"
+
+
+kubeadm init error: CRI v1 runtime API is not implemented
+
+Hi, I'll write this post to help anyone encountering my same issue, given that I could not find the solution in past forum discussions.
+
+I'm following the installation PDF for the class, exactly with all required versions: Ubuntu 20.04 (on a Google Cloud VM), kubeadm 1.24.1, etc.
+But when executing the kubeadm init command I got the following error:
+
+[init] Using Kubernetes version: v1.24.1
+[preflight] Running pre-flight checks
+error execution phase preflight: [preflight] Some fatal errors occurred:
+        [ERROR CRI]: container runtime is not running: output: time="2023-01-19T15:05:35Z" level=fatal msg="validate service connection: CRI v1 runtime API is not implemented for endpoint \"unix:///var/run/containerd/containerd.sock\": rpc error: code = Unimplemented desc = unknown service runtime.v1.RuntimeService"
+, error: exit status 1
+[preflight] If you know what you are doing, you can make a check non-fatal with `--ignore-preflight-errors=...`
+To see the stack trace of this error execute with --v=5 or higher
+By searching the web it appears this is an issue with the old containerd provided by Ubuntu 20.
+I solved it with the following steps (as root):
+1. Set up the Docker repository as described in https://docs.docker.com/engine/install/ubuntu/#set-up-the-repository
+2. Remove the old containerd:apt remove containerd
+3. Update repository data and install the new containerd: apt update, apt install containerd.io
+4. Remove the installed default config file: rm /etc/containerd/config.toml
+5. Restart containerd: systemctl restart containerd
+
+The kubeadm init command worked fine afterwards.
+
